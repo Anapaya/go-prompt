@@ -162,6 +162,9 @@ func (p *Prompt) feed(b []byte) (shouldExit bool, exec *Exec) {
 }
 
 func (p *Prompt) handleCompletionKeyBinding(key Key, completing bool) {
+	if p.completion.max == 0 {
+		return
+	}
 	switch key {
 	case Down:
 		if completing || p.completionOnDown {
