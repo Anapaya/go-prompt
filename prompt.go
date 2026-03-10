@@ -42,6 +42,17 @@ type Exec struct {
 	input string
 }
 
+// SetHistory sets the history of the prompt.
+func (p *Prompt) SetHistory(x []string) {
+	p.history.histories = x
+	p.history.Clear()
+}
+
+// GetHistory returns the current history of the prompt.
+func (p *Prompt) GetHistory() []string {
+	return p.history.histories
+}
+
 // Run starts prompt.
 func (p *Prompt) Run() {
 	p.skipTearDown = false
