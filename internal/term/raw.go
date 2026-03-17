@@ -1,3 +1,4 @@
+//go:build !windows
 // +build !windows
 
 package term
@@ -11,10 +12,13 @@ import (
 
 // SetRaw put terminal into a raw mode
 func SetRaw(fd int) error {
-	n, err := getOriginalTermios(fd)
+	orig, err := getOriginalTermios(fd)
 	if err != nil {
 		return err
 	}
+
+	// Copy the struct so we don't mutate the saved original through the pointer.
+	n := *orig
 
 	n.Iflag &^= syscall.IGNBRK | syscall.BRKINT | syscall.PARMRK |
 		syscall.ISTRIP | syscall.INLCR | syscall.IGNCR |
@@ -25,5 +29,5 @@ func SetRaw(fd int) error {
 	n.Cc[syscall.VMIN] = 1
 	n.Cc[syscall.VTIME] = 0
 
-	return termios.Tcsetattr(uintptr(fd), termios.TCSANOW, (*unix.Termios)(n))
+	return termios.Tcsetattr(uintptr(fd), termios.TCSANOW, (*unix.Termios)(&n))
 }
