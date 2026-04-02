@@ -30,6 +30,33 @@ func GetKey(b []byte) Key {
 	return NotDefined
 }
 
+// splitKeys splits a raw byte slice into individual key sequences.
+// When a key is held down, the terminal may deliver multiple ANSI escape
+// sequences concatenated in a single read. This function breaks them apart
+// using a greedy longest-match against ASCIISequences so that each chunk
+// can be dispatched as its own keystroke rather than falling through as
+// NotDefined and being inserted verbatim into the buffer.
+func splitKeys(b []byte) [][]byte {
+	var result [][]byte
+	for len(b) > 0 {
+		best := 0
+		for _, seq := range ASCIISequences {
+			n := len(seq.ASCIICode)
+			if n > best && len(b) >= n && bytes.Equal(b[:n], seq.ASCIICode) {
+				best = n
+			}
+		}
+		if best > 0 {
+			result = append(result, b[:best])
+			b = b[best:]
+		} else {
+			result = append(result, b[:1])
+			b = b[1:]
+		}
+	}
+	return result
+}
+
 // ASCIISequences holds mappings of the key and byte array.
 var ASCIISequences = []*ASCIICode{
 	{Key: Escape, ASCIICode: []byte{0x1b}},
